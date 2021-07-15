@@ -184,17 +184,24 @@ int main(int argc, char *argv[]){
         // Se llama a accept() y el servidor queda en espera de conexiones. accept() es bloqueante.
         addrlen = sizeof (struct sockaddr);
         socket_aceptado = accept(sockfd, (struct sockaddr *)&remote_addr, (socklen_t *) &addrlen);
+        // recv(socket_aceptado, &cantidad, sizeof(int), 0);
+        // cout << cantidad << endl;
 
 
-        cin >> cantidad;
-        for (int j = 1; j < cNodos; j++){
-            MPI_Send(&cantidad, 1, MPI_INT, j , tagCantidadConsultas, MPI_COMM_WORLD);
-        }
+        
+        // for (int j = 1; j < cNodos; j++){
+        //     MPI_Send(&cantidad, 1, MPI_INT, j , tagCantidadConsultas, MPI_COMM_WORLD);
+        // }
         string query;
         string respuesta;
-        for (int i = 0; i < cantidad; i++)
+        while (true)
         {   
-            cin >> query;
+            char buffer_recv [1024];
+            recv(socket_aceptado, buffer_recv, sizeof(char)*1024 , 0);
+            query = buffer_recv;
+    
+            // cout << buffer_recv << endl;
+           
             int nodoRespuesta = nodos[query] - 1;
 
             for (int j = 1; j < cNodos; j++){
@@ -207,7 +214,7 @@ int main(int argc, char *argv[]){
                     respuesta += x + " ";
                 }
             }else if(nodoRespuesta < 0){
-                respuesta = "no ta";
+                respuesta = "No se encuentra la palabra";
             }else{
                 largo = query.size();
                 MPI_Send(&largo, 1, MPI_INT, nodoRespuesta , tagEnvioLargoConsulta, MPI_COMM_WORLD);
@@ -218,9 +225,11 @@ int main(int argc, char *argv[]){
                 MPI_Recv(buffer, largo + 1, MPI_CHAR, nodoRespuesta, tagEnvioRespuesta, MPI_COMM_WORLD, &status);
                 respuesta = buffer;
             }
-            cout << respuesta << endl;
+            // sleep(1);
+            send(socket_aceptado, respuesta.c_str(), sizeof(char)*1024 , 0);
         }
-        
+        close(socket_aceptado);
+        close(sockfd);
 
         
         // for (int i = 0; i < consultas.size(); i++){     //Envio del largo y las consultas
@@ -275,9 +284,9 @@ int main(int argc, char *argv[]){
 
         int cantConsultas;
 
-        MPI_Recv(&cantConsultas, 1, MPI_INT, 0, tagCantidadConsultas, MPI_COMM_WORLD, &status);
+        // MPI_Recv(&cantConsultas, 1, MPI_INT, 0, tagCantidadConsultas, MPI_COMM_WORLD, &status);
         // cout << cantConsultas << endl;
-        for (int i = 0; i < cantConsultas; i++)
+        while (true)
         {
             int nodoResponde;
             MPI_Recv(&nodoResponde, 1, MPI_INT, 0, tagNodoResponde, MPI_COMM_WORLD, &status);
@@ -289,6 +298,7 @@ int main(int argc, char *argv[]){
                 
                 MPI_Recv(buffer, largo + 1, MPI_CHAR, 0, tagEnvioConsulta, MPI_COMM_WORLD, &status);
                 query = buffer;
+                              
                 string respuesta = "";
 
                 for(auto x: palabras[query]){

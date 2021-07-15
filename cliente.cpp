@@ -29,18 +29,23 @@ int main()
 
 
 
-    int cantidad;
+    // int cantidad;
 
-    cin >> cantidad;
-    send(sockfd, &cantidad, sizeof(int) , 0);
+    // cin >> cantidad;
+    // send(sockfd, &cantidad, sizeof(int) , 0);
 
     char buffer[1024];
 
-    for (size_t i = 0; i < cantidad; i++)
+    cout << "Para finalizar el programa ingrese -1" << endl;
+
+    while (true)
     {
         cin >> buffer;
+        if (string(buffer) == "-1")
+        {
+            break;
+        }
         send(sockfd, buffer, sizeof(char)*1024 , 0);
-
         recv(sockfd, buffer, sizeof(char)*1024, 0);
         cout << buffer << endl;
     }
