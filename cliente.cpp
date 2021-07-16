@@ -15,24 +15,13 @@ int main()
     struct sockaddr_in remote_addres;
     int addrlen;
 
+    sockfd = socket (AF_INET, SOCK_STREAM, 0); // Creacion del socket
 
-    // Creacion del socket.
-    sockfd = socket (AF_INET, SOCK_STREAM, 0); 
-
-    remote_addres.sin_family = AF_INET; //Protocolo TCP
-    remote_addres.sin_port = htons(3000); //Puerto
+    remote_addres.sin_family = AF_INET; // Protocolo TCP
+    remote_addres.sin_port = htons(3000); // Puerto
     remote_addres.sin_addr.s_addr = inet_addr ("127.0.0.1"); // IP por donde recibira paquetes el programa
-
-    //int connect ( int sockfd, struct sockaddr *serv_addr, int addrlen )
     
-    connect (sockfd, (struct sockaddr *) &remote_addres, sizeof(struct sockaddr));
-
-
-
-    // int cantidad;
-
-    // cin >> cantidad;
-    // send(sockfd, &cantidad, sizeof(int) , 0);
+    connect (sockfd, (struct sockaddr *) &remote_addres, sizeof(struct sockaddr)); // coneccion al socket
 
     char buffer[1024];
 
@@ -40,18 +29,18 @@ int main()
 
     while (true)
     {
-        cin >> buffer;
-        if (string(buffer) == "-1")
+        cin >> buffer;  //Ingreso por teclado de la palabra a consultar
+        if (string(buffer) == "-1") //condicion para terminar el programa
         {
             break;
         }
-        send(sockfd, buffer, sizeof(char)*1024 , 0);
-        recv(sockfd, buffer, sizeof(char)*1024, 0);
+        send(sockfd, buffer, sizeof(char)*1024 , 0);    //se envia la palabra hacia el frontend
+        recv(sockfd, buffer, sizeof(char)*1024, 0);     //se recibe la respuesta desde el frontend
         cout << buffer << endl;
     }
 
 
-    close(sockfd);
+    close(sockfd);  //cierre del socket
     return 0;
 }
 

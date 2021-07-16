@@ -128,80 +128,40 @@ int main(int argc, char *argv[]){
             }
         }
 
-        
-
-        // for (int i = 0; i < cantidad; i++){     //Se leen las  desded el archivoconsultas
-        //     cin >> consulta;
-        //     if(nodos[consulta] - 1 == 0){
-        //         cout << "Resultados para \"" <<  consulta << "\": ";
-        //         for (auto i : palabras[consulta]){
-        //             cout << i << " ";
-        //         }
-        //         cout << endl;
-        //     }else if(nodos[consulta] - 1 > 0 ){
-        //         cantidadQueryPorNodo[nodos[consulta] - 1] += 1;
-        //         consultas.push_back(consulta);
-        //     }else{
-        //         cout << "Resultados para \"" <<  consulta << "\": No hay resultados." << endl;
-        //     }
-        // }
-
-       
-        // for (int i = 1; i < cNodos ; i++){       // SE MANDAN LAS CANTIDADES A LOS NODOS QUE FALTAN
-        //     MPI_Send(&cantidadQueryPorNodo[i], 1, MPI_INT, i, tagEnvioDeCantidad, MPI_COMM_WORLD);
-        // }
-
-
-
         int i, sockfd, socket_aceptado;
         struct sockaddr_in my_addr;
         struct sockaddr_in remote_addr;
         int addrlen;
 
-
-        // Creacion del socket.
-        sockfd = socket (AF_INET, SOCK_STREAM, 0);
+        sockfd = socket (AF_INET, SOCK_STREAM, 0);  // Creacion del socket
 
         my_addr.sin_family = AF_INET; //Protocolo TCP
         my_addr.sin_port = htons(3001); //Puerto
         my_addr.sin_addr.s_addr = inet_addr ("127.0.0.1"); // IP por donde recibira paquetes el programa
-        //my_addr.sin_addr.s_addr = inet_addr ("192.168.101.68"); // IP por donde recibira paquetes el programa
 
-        // Asignando IP y puerto al socket
-        if (-1 == bind (sockfd, (struct sockaddr *) &my_addr, sizeof(struct sockaddr) ))
+        if (-1 == bind (sockfd, (struct sockaddr *) &my_addr, sizeof(struct sockaddr) ))    // Asignando IP y puerto al socket
         {
             perror("bind");
             exit(EXIT_FAILURE);
         }
 
-        // Se habilita el socket para poder recibir conexiones.
-        if (-1 == listen(sockfd, 50))
+        if (-1 == listen(sockfd, 50))   // Se habilita el socket para poder recibir conexiones
         {
             perror("listen");
             exit(EXIT_FAILURE);
         }
     
-        // Se llama a accept() y el servidor queda en espera de conexiones. accept() es bloqueante.
         addrlen = sizeof (struct sockaddr);
-        socket_aceptado = accept(sockfd, (struct sockaddr *)&remote_addr, (socklen_t *) &addrlen);
-        // recv(socket_aceptado, &cantidad, sizeof(int), 0);
-        // cout << cantidad << endl;
+        socket_aceptado = accept(sockfd, (struct sockaddr *)&remote_addr, (socklen_t *) &addrlen); //el servidor queda en espera de conexiones
 
-
-        
-        // for (int j = 1; j < cNodos; j++){
-        //     MPI_Send(&cantidad, 1, MPI_INT, j , tagCantidadConsultas, MPI_COMM_WORLD);
-        // }
         string query;
         string respuesta;
         while (true)
         {   
             char buffer_recv [1024];
-            recv(socket_aceptado, buffer_recv, sizeof(char)*1024 , 0);
+            recv(socket_aceptado, buffer_recv, sizeof(char)*1024 , 0);  //Se recibe la consulta desde el frontend
             query = buffer_recv;
     
-            // cout << buffer_recv << endl;
-           
             int nodoRespuesta = nodos[query] - 1;
 
             for (int j = 1; j < cNodos; j++){
@@ -226,22 +186,11 @@ int main(int argc, char *argv[]){
                 respuesta = buffer;
             }
             // sleep(1);
-            send(socket_aceptado, respuesta.c_str(), sizeof(char)*1024 , 0);
+            send(socket_aceptado, respuesta.c_str(), sizeof(char)*1024 , 0);    //Se envia la respuesta hacia el frontend
         }
+        //Cierre de los sockets
         close(socket_aceptado);
         close(sockfd);
-
-        
-        // for (int i = 0; i < consultas.size(); i++){     //Envio del largo y las consultas
-        //     int largo = consultas[i].length();
-        //     MPI_Send(&largo, 1, MPI_INT, nodos[consultas[i]] - 1, tagCantidadConsultas, MPI_COMM_WORLD);
-        //     MPI_Send(consultas[i].c_str(), largo + 1, MPI_CHAR, nodos[consultas[i]] - 1, tagEnvioConsulta, MPI_COMM_WORLD);
-
-        //     MPI_Recv(&largo, 1, MPI_INT, 0, tagCantidadConsultas, MPI_COMM_WORLD, &status);
-        //     MPI_Recv(buffer, largo + 1, MPI_CHAR, 0, tagEnvioConsulta, MPI_COMM_WORLD, &status);
-
-        //     cout << buffer << endl;
-        // }
         
     }else {                   
         MPI_Recv(&cantidadArchivos, 1, MPI_INT, 0, tagCantArchivos, MPI_COMM_WORLD, &status);       //Se recibe la cantidad de archivos correspondiente a cada nodo
@@ -279,13 +228,6 @@ int main(int argc, char *argv[]){
             }
         }
 
-        
-
-
-        int cantConsultas;
-
-        // MPI_Recv(&cantConsultas, 1, MPI_INT, 0, tagCantidadConsultas, MPI_COMM_WORLD, &status);
-        // cout << cantConsultas << endl;
         while (true)
         {
             int nodoResponde;
@@ -309,23 +251,6 @@ int main(int argc, char *argv[]){
                 MPI_Send(respuesta.c_str(), largo + 1, MPI_CHAR, 0, tagEnvioRespuesta, MPI_COMM_WORLD);
             }
         }
-        
-        
-        
-
-        // MPI_Recv(&cantidadQuery, 1, MPI_INT, 0, tagEnvioDeCantidad, MPI_COMM_WORLD, &status);           // Se recibe cantidad de consultas
-        
-        // for (int i = 0; i < cantidadQuery; i++){            //Se reciben el largo de las consultas y las consultas 
-        //     MPI_Recv(&largoConsulta, 1, MPI_INT, 0, tagCantidadConsultas, MPI_COMM_WORLD, &status);
-        //     MPI_Recv(buffer, largoConsulta + 1, MPI_CHAR, 0, tagEnvioConsulta, MPI_COMM_WORLD, &status);
-        //     string consultaFinal = buffer;
-            
-        //     cout << "Resultados para \"" <<  consultaFinal << "\": ";
-        //     for (auto i : palabras[consultaFinal]){
-        //         cout << i << " ";
-        //     }
-        //     cout << endl;
-        // }
     }
     MPI_Finalize();
     return 0;
